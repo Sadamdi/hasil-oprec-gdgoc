@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cek Hasil Open Recruitment GDGoC Maliki</title>
+<style>
+  body { font-family: Arial, sans-serif; background: #f8f9fa; margin: 0; color: #202124; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  .sub { color: #5f6368; margin: 0 0 20px; font-size: 14px; }
+  .card { background: #fff; border: 1px solid #dadce0; border-radius: 12px; padding: 18px; margin-bottom: 16px; }
+  label { display: block; font-size: 13px; color: #5f6368; margin: 10px 0 4px; }
+  input { width: 100%; box-sizing: border-box; padding: 10px; font-size: 15px; border: 1px solid #dadce0; border-radius: 8px; }
+  button { margin-top: 14px; padding: 10px 18px; font-size: 15px; background: #4285f4; color: #fff; border: 0; border-radius: 8px; cursor: pointer; }
+  button:disabled { background: #9aa0a6; }
+  .msg { padding: 12px; border-radius: 8px; background: #fff3cd; font-size: 14px; }
+  .err { background: #fce8e6; }
+  .big { font-size: 34px; font-weight: bold; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .kpi { flex: 1; min-width: 140px; background: #f8f9fa; border-radius: 10px; padding: 12px; text-align: center; }
+  .kpi small { display: block; color: #5f6368; font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid #eee; vertical-align: top; }
+  td.n { white-space: nowrap; text-align: right; }
+  .why { color: #5f6368; font-size: 13px; }
+  h2 { font-size: 16px; margin: 0 0 8px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Cek Hasil Open Recruitment</h1>
+  <p class="sub">GDGoC UIN Maulana Malik Ibrahim Malang, periode 2026/2027</p>
+
+  <div class="card">
+    <label for="nama">Nama lengkap (sama seperti saat mendaftar)</label>
+    <input id="nama" autocomplete="off">
+    <label for="nim">NIM</label>
+    <input id="nim" inputmode="numeric" autocomplete="off">
+    <button id="btn" onclick="cek()">Lihat hasil</button>
+  </div>
+  <div id="out"></div>
+</div>
+
+<script>
+var API = 'https://script.google.com/macros/s/AKfycbz5u7Vm1Hx5ykRrwTDyjF4AbIQojwtFwLuI05gSHr1aiZX8Jb9JKhBqcFfXZJq36M-CLw/exec';
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+  });
+}
+function f(x) { return (typeof x === 'number') ? (Math.round(x * 100) / 100).toString().replace('.', ',') : esc(x); }
+
+function cek() {
+  var btn = document.getElementById('btn');
+  btn.disabled = true; btn.textContent = 'Mencari...';
+  document.getElementById('out').innerHTML = '';
+  var ok = function (r) { btn.disabled = false; btn.textContent = 'Lihat hasil'; tampil(r); };
+  var gagal = function () { btn.disabled = false; btn.textContent = 'Lihat hasil'; pesan('Terjadi gangguan. Coba lagi sebentar lagi.', true); };
+  fetch(API, { method: 'POST', body: JSON.stringify({ nama: document.getElementById('nama').value, nim: document.getElementById('nim').value }) })
+    .then(function (x) { return x.json(); }).then(ok).catch(gagal);
+}
+
+function pesan(t, err) {
+  document.getElementById('out').innerHTML = '<div class="msg' + (err ? ' err' : '') + '">' + esc(t) + '</div>';
+}
+
+function blok(judul, b) {
+  if (!b) return '';
+  var h = '<div class="card"><h2>' + esc(judul) + ' (' + f(b.total) + ' dari ' + f(b.maks) + ')</h2><table>';
+  b.kriteria.forEach(function (k) {
+    h += '<tr><td>' + esc(k.nama) + (k.alasan ? '<div class="why">' + esc(k.alasan) + '</div>' : '') +
+         '</td><td class="n">' + f(k.skor) + ' / ' + f(k.maks) + '</td></tr>';
+  });
+  h += '</table>';
+  if (b.catatan) h += '<p class="why"><b>Catatan penilai:</b> ' + esc(b.catatan) + '</p>';
+  return h + '</div>';
+}
+
+function tampil(r) {
+  if (r.status === 'belum') return pesan('Hasil belum dibuka. Pantau pengumuman resmi GDGoC Maliki ya.');
+  if (r.status === 'tidak') return pesan('Data tidak ditemukan. Pastikan nama lengkap dan NIM sama seperti yang kamu isi di formulir.', true);
+  if (r.status === 'proses') return pesan('Penilaian kamu masih diproses. Coba cek lagi nanti.');
+  var h = '<div class="card"><h2>' + esc(r.nama) + '</h2>' +
+    '<div class="why">Pilihan 1: ' + esc(r.pilihan1.divisi) + (r.pilihan1.subdivisi ? ' - ' + esc(r.pilihan1.subdivisi) : '') +
+    (r.pilihan2 ? '<br>Pilihan 2: ' + esc(r.pilihan2.divisi) + (r.pilihan2.subdivisi ? ' - ' + esc(r.pilihan2.subdivisi) : '') : '') + '</div>' +
+    '<div class="row" style="margin-top:12px">' +
+    '<div class="kpi"><small>Total nilai</small><span class="big">' + f(r.total) + '</span><small>dari 100</small></div>' +
+    '<div class="kpi"><small>Peringkat di ' + esc(r.pilihan1.divisi) + '</small><span class="big">' + f(r.peringkat) + '</span><small>dari ' + f(r.dariBerapa) + ' pelamar</small></div>' +
+    '<div class="kpi"><small>Umum / Divisi</small><span class="big" style="font-size:22px">' + f(r.nilaiUmum) + ' / ' + f(r.nilaiDivisi) + '</span></div>' +
+    '</div></div>';
+  h += blok('Penilaian umum (Ketua dan Wakil Ketua)', r.umum);
+  h += blok('Penilaian ' + r.pilihan1.divisi, r.divisi1);
+  if (r.divisi2) h += blok('Penilaian ' + r.pilihan2.divisi + ' (pilihan 2)', r.divisi2);
+  document.getElementById('out').innerHTML = h;
+}
+</script>
+</body>
+</html>
