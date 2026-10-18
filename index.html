@@ -90,6 +90,7 @@
   .note b { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--mute); margin-bottom: 2px; }
   .sub { font-size: 13px; color: var(--mute); margin: 0 0 8px; }
   .sec-t { font-size: 14px; font-weight: 700; margin: 16px 0 4px; }
+  .gbtn { display: block; text-align: center; padding: 13px; background: #25d366; color: #fff; font-weight: 600; text-decoration: none; border-radius: 12px; }
   .foot { text-align: center; color: var(--mute); font-size: 12.5px; margin-top: 26px; }
   .final-note { padding: 0 20px 20px; font-size: 13.5px; color: var(--mute); text-align: center; }
 
@@ -184,6 +185,12 @@ function tampil(r) {
     '</div></div>';
   h += '<div class="final-note">Keputusan ini ditetapkan oleh panitia berdasarkan nilai seleksi dan kuota tiap divisi.</div></div>';
 
+  if (lulus && (r.grup || r.kontak)) {
+    var gl = /^https:\/\//.test(r.grup || '') ? '<a class="gbtn" href="' + esc(r.grup) + '" target="_blank" rel="noopener">Gabung grup WhatsApp Core Team</a>' : '';
+    h += '<div class="card fade"><div class="sec-t" style="margin-top:0">Langkah selanjutnya</div>' +
+      '<p class="sub">Gabung ke grup Core Team untuk informasi berikutnya.</p>' + gl +
+      (r.kontak ? '<p class="sub" style="margin:12px 0 0">Kalau ada kendala, hubungi: ' + esc(r.kontak) + '</p>' : '') + '</div>';
+  }
   var rinci = blok('Penilaian umum', 'Dinilai bersama oleh Ketua dan Wakil Ketua', r.umum) +
               blok('Penilaian ' + p1.divisi, 'Pilihan 1', r.divisi1) +
               (r.divisi2 && p2 ? blok('Penilaian ' + p2.divisi, 'Pilihan 2', r.divisi2) : '');
@@ -253,7 +260,22 @@ $('form').addEventListener('submit', function (e) {
 });
 
 var m = location.search.match(/demo=(\w+)/);
+var tk = location.search.match(/[?&]k=([0-9a-fA-F]{32})(?:&|$)/);
 if (m) { var k = m[1] === '1' ? 'lulus' : m[1]; tampil(demo(k)); }
+else if (tk) {
+  // link pribadi dari email: langsung tampilkan hasil tanpa mengisi nama dan NIM
+  $('form').style.display = 'none';
+  $('out').innerHTML = '<div class="card"><div class="sk" style="width:55%"></div><div class="sk"></div><div class="sk" style="width:80%"></div></div>';
+  var t0 = Date.now();
+  fetch(API, { method: 'POST', body: JSON.stringify({ token: tk[1] }) })
+    .then(function (x) { return x.json(); })
+    .then(function (r) {
+      setTimeout(function () {
+        if (r.status === 'tidak') { $('form').style.display = ''; pesan('🔗', 'Link tidak valid', 'Link ini tidak dikenali. Kamu tetap bisa melihat hasil dengan mengisi nama lengkap dan NIM di atas.', true); }
+        else tampil(r);
+      }, Math.max(0, 900 - (Date.now() - t0)));
+    }, function () { $('form').style.display = ''; pesan('⚠️', 'Terjadi gangguan', 'Coba muat ulang halaman ini sebentar lagi.', true); });
+}
 </script>
 </body>
 </html>
