@@ -109,10 +109,9 @@
 <div class="wrap">
   <div class="brand"><span class="dots"><i style="background:#4285f4"></i><i style="background:#ea4335"></i><i style="background:#fbbc04"></i><i style="background:#34a853"></i></span>GDGoC UIN Maulana Malik Ibrahim Malang</div>
   <h1>Pengumuman hasil seleksi</h1>
-  <p class="lead">Open Recruitment Core Team periode 2026/2027. Masukkan data yang sama seperti saat mendaftar.</p>
+  <p class="lead">Open Recruitment Core Team periode 2026/2027. Masukkan NIM yang kamu isi saat mendaftar.</p>
 
   <form class="card" id="form" autocomplete="off">
-    <div class="field"><label for="nama">Nama lengkap</label><input id="nama" placeholder="Sesuai yang diisi di formulir" autocapitalize="words" required></div>
     <div class="field"><label for="nim">NIM</label><input id="nim" inputmode="numeric" placeholder="Contoh: 24xxxxxxxxxx" required></div>
     <button class="go" id="btn" type="submit">Lihat hasil</button>
     <p class="hint">Hanya data kamu sendiri yang tampil. Data pelamar lain tidak bisa dilihat.</p>
@@ -151,7 +150,7 @@ function blok(judul, ket, b) {
 
 function tampil(r) {
   if (r.status === 'belum') return pesan('⏳', 'Pengumuman belum dibuka', 'Pantau pengumuman resmi GDGoC Maliki. Halaman ini terbuka otomatis saat hasil diumumkan.');
-  if (r.status === 'tidak') return pesan('🔎', 'Data tidak ditemukan', 'Pastikan nama lengkap dan NIM sama persis seperti yang kamu isi di formulir pendaftaran.', true);
+  if (r.status === 'tidak') return pesan('🔎', 'Data tidak ditemukan', 'Pastikan NIM sama persis seperti yang kamu isi di formulir pendaftaran.', true);
   if (r.status === 'proses') return pesan('🛠️', 'Hasil belum tersedia', 'Penilaian kamu belum selesai diproses. Coba cek lagi nanti.');
 
   var lulus = r.keputusan === 'lulus', d = r.diterima || {};
@@ -255,7 +254,7 @@ $('form').addEventListener('submit', function (e) {
   var t0 = Date.now();
   var done = function (r) { setTimeout(function () { btn.disabled = false; btn.textContent = 'Lihat hasil'; tampil(r); }, Math.max(0, 900 - (Date.now() - t0))); };
   var fail = function () { btn.disabled = false; btn.textContent = 'Lihat hasil'; pesan('⚠️', 'Terjadi gangguan', 'Coba lagi sebentar lagi.', true); };
-  fetch(API, { method: 'POST', body: JSON.stringify({ nama: $('nama').value, nim: $('nim').value }) })
+  fetch(API, { method: 'POST', body: JSON.stringify({ nim: $('nim').value }) })
     .then(function (x) { return x.json(); }).then(done, fail);
 });
 
@@ -271,7 +270,7 @@ else if (tk) {
     .then(function (x) { return x.json(); })
     .then(function (r) {
       setTimeout(function () {
-        if (r.status === 'tidak') { $('form').style.display = ''; pesan('🔗', 'Link tidak valid', 'Link ini tidak dikenali. Kamu tetap bisa melihat hasil dengan mengisi nama lengkap dan NIM di atas.', true); }
+        if (r.status === 'tidak') { $('form').style.display = ''; pesan('🔗', 'Link tidak valid', 'Link ini tidak dikenali. Kamu tetap bisa melihat hasil dengan mengisi NIM di atas.', true); }
         else tampil(r);
       }, Math.max(0, 900 - (Date.now() - t0)));
     }, function () { $('form').style.display = ''; pesan('⚠️', 'Terjadi gangguan', 'Coba muat ulang halaman ini sebentar lagi.', true); });
